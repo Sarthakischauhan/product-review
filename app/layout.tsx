@@ -24,7 +24,6 @@ export default function RootLayout({
           "flex flex-col min-h-screen",
         )}
       >
-        <Nav />
         {children}
       </body>
     </html>

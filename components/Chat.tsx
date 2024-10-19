@@ -5,6 +5,7 @@ import Messages from "./Messages";
 import Controls from "./Controls";
 import StartCall from "./StartCall";
 import { ComponentRef, useRef } from "react";
+import { configs } from "hume/api/resources/empathicVoice";
 
 export default function ClientComponent({
   accessToken,
@@ -26,7 +27,6 @@ export default function ClientComponent({
           if (timeout.current) {
             window.clearTimeout(timeout.current);
           }
-
           timeout.current = window.setTimeout(() => {
             if (ref.current) {
               const scrollHeight = ref.current.scrollHeight;
@@ -37,6 +37,14 @@ export default function ClientComponent({
               });
             }
           }, 200);
+        }}
+        configId="a43f8ead-ce5d-4c85-9b22-18b9da7110a6"
+        sessionSettings={{
+          type: "session_settings",
+          variables:{
+            "name":"Sarthak", 
+            "age":"20"
+          }
         }}
       >
         <Messages ref={ref} />
