@@ -1,9 +1,10 @@
-"use client"
+"use client";
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -11,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Textarea } from "@/components/ui/textarea"
+import { Copy, ExternalLink, X } from 'lucide-react'
 
 const interestFields = [
   { id: "ui", label: "UI/UX" },
@@ -30,14 +33,17 @@ const formSchema = z.object({
   interestFields: z.array(z.string()).refine((value) => value.some((item) => item), {
     message: "You have to select at least one item.",
   }),
-  reviewType: z.enum(["images", "livePreview"], {
+  reviewType: z.enum(["static", "livePreview"], {
     required_error: "Please select a review type.",
   }),
   screenCount: z.string().optional(),
   files: z.any().optional(),
   livePreviewLink: z.string().url().optional(),
+  productInfo: z.string().min(100, {
+    message: "Product info must be at least 100 characters.",
+  }),
 }).refine((data) => {
-  if (data.reviewType === "images") {
+  if (data.reviewType === "static") {
     return !!data.screenCount && !!data.files && 
            data.files.length > 0 && data.files.length <= 5 && 
            Array.from(data.files).every((file) => file.type.startsWith("image/"));
@@ -51,6 +57,17 @@ const formSchema = z.object({
 });
 
 const Page = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [reviewLink, setReviewLink] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedLink = localStorage.getItem('reviewLink');
+    if (storedLink) {
+      setReviewLink(storedLink);
+    }
+  }, []);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -61,18 +78,94 @@ const Page = () => {
       reviewType: "livePreview",
       files: undefined,
       livePreviewLink: "",
+      productInfo: "",
     },
   })
 
   const reviewType = form.watch("reviewType")
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const response = await fetch('/api/config', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create config');
+      }
+
+      const result = await response.json();
+      console.log('Config created:', result);
+      const link = `https://localhost:3000/review/${result.configId}`;
+      setReviewLink(link);
+      localStorage.setItem('reviewLink', link);
+    } catch (error) {
+      console.error('Error creating config:', error);
+      setSubmitError('Failed to create config. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  const copyToClipboard = () => {
+    if (reviewLink) {
+      navigator.clipboard.writeText(reviewLink);
+    }
+  }
+
+  const closeReviewLink = () => {
+    setReviewLink(null);
+    localStorage.removeItem('reviewLink');
   }
 
   return (
     <div className="w-full h-auto flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md">
+      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-md relative">
+        <AnimatePresence>
+          {reviewLink && (
+            <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="absolute top-0 left-0 right-0 p-4 bg-green-100 rounded-t-lg flex justify-between items-center"
+          >
+            <span className="text-green-800 font-medium">{reviewLink}</span>
+            <div className="flex space-x-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={copyToClipboard}
+                className="text-green-800 hover:text-green-900"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => window.open(reviewLink, '_blank')}
+                className="text-green-800 hover:text-green-900"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={closeReviewLink}
+                className="text-green-800 hover:text-green-900"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </motion.div>
+          )}
+        </AnimatePresence>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <FormField
@@ -164,7 +257,7 @@ const Page = () => {
                     >
                       <FormItem className="flex items-center space-x-3 space-y-0">
                         <FormControl>
-                          <RadioGroupItem value="images" />
+                          <RadioGroupItem value="static" />
                         </FormControl>
                         <FormLabel className="font-normal">
                           Images
@@ -185,7 +278,7 @@ const Page = () => {
               )}
             />
             <Tabs value={reviewType} className="w-full">
-              <TabsContent value="images">
+              <TabsContent value="static">
                 <FormField
                   control={form.control}
                   name="screenCount"
@@ -250,7 +343,31 @@ const Page = () => {
                 />
               </TabsContent>
             </Tabs>
-            <Button type="submit" className="w-full">Submit</Button>
+            <FormField
+              control={form.control}
+              name="productInfo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Product Information</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Enter detailed information about your product" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Provide a brief description of your product and its key features.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {submitError && (
+              <div className="text-red-500 text-sm">{submitError}</div>
+            )}
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Submitting...' : 'Submit'}
+            </Button>
           </form>
         </Form>
       </div>
