@@ -10,8 +10,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.9.0",
     "@humeai/voice-react": "^0.1.12",
-    "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-checkbox": "^1.1.2",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-select": "^2.1.2",
+    "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-toggle": "^1.0.3",
     "@types/react-virtualized": "^9.21.30",
@@ -24,12 +28,15 @@
     "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18",
+    "react-hook-form": "^7.53.1",
     "react-virtualized": "^9.22.5",
     "remeda": "^2.0.9",
     "server-only": "^0.0.1",
+    "shadcn-ui": "^0.9.2",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
-    "ts-pattern": "^5.1.2"
+    "ts-pattern": "^5.1.2",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/node": "^20",

@@ -30,9 +30,9 @@ export default async function Page() {
           <p className="text-sm text-gray-500">
             Don't worry, we will not be storing your audio and video feed.
           </p>
-          <div className="flex-grow overflow-y-auto">
+          {/* <div className="flex-grow overflow-y-auto">
             <Chat accessToken={accessToken} />
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
