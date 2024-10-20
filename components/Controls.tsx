@@ -1,14 +1,14 @@
 "use client";
 import { useVoice } from "@humeai/voice-react";
 import { Button } from "./ui/button";
-import { Mic, MicOff, Phone } from "lucide-react";
+import { Mic, MicOff, Phone, PauseIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Toggle } from "./ui/toggle";
 import MicFFT from "./MicFFT";
 import { cn } from "@/utils";
 
 export default function Controls() {
-  const { disconnect, status, isMuted, unmute, mute, micFft } = useVoice();
+  const { disconnect, status, isMuted, unmute, mute, micFft, pauseAssistant} = useVoice();
 
   return (
     <div
@@ -72,6 +72,22 @@ export default function Controls() {
                 />
               </span>
               <span>End Call</span>
+            </Button>
+            <Button
+              className={"flex items-center gap-1"}
+              onClick={() => {
+                pauseAssistant();
+              }}
+              variant={"ghost"}
+            >
+              <span>
+                <PauseIcon
+                  className={"size-4 opacity-50"}
+                  strokeWidth={2}
+                  stroke={"currentColor"}
+                />
+              </span>
+              <span>Pause</span>
             </Button>
           </motion.div>
         ) : null}
